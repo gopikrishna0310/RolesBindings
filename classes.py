@@ -69,9 +69,10 @@ class RoleCheck:
         for role_item in self.roles['items']:
             role_name = role_item['metadata']['name']
             for roles_rule in role_item['rules']:
-                role_verbs = roles_rule['verbs']
-                role_resources = roles_rule['resources']
-                self.role_check(verbs=role_verbs, resources=role_resources, role_name=role_name)
+                if all(map(lambda x: x in roles_rule.keys(), ('verbs', 'resources'))):
+                    role_verbs = roles_rule['verbs']
+                    role_resources = roles_rule['resources']
+                    self.role_check(verbs=role_verbs, resources=role_resources, role_name=role_name)
 
     def role_check(self, verbs, resources, role_name):
         """
@@ -86,8 +87,9 @@ class RoleCheck:
 
         verb_str, resource_str = [self._helper(*args) for args in ((VERBS, verbs), (RESOURCES, resources))]
         if verb_str and resource_str:
-            FUNCTION_MAPPING.get((verb_str, resource_str), lambda x, y: print('Invalid', x, y, verb_str, resource_str))(role_name, self.cluster)
-            self.result_names.add_name(name=role_name, func=FUNCTION_MAPPING.get((verb_str, resource_str)), verbs=verbs,
+            function_ = FUNCTION_MAPPING.get((verb_str, resource_str), lambda x, y: print('Invalid', x, y, verb_str, resource_str))
+            function_(role_name, self.cluster)
+            self.result_names.add_name(name=role_name, func=function_, verbs=verbs,
                                        resources=resources, verb_str=verb_str, resource_str=resource_str,
                                        cluster=self.cluster)
 
@@ -105,13 +107,16 @@ class BindingCheck:
         """
         role_names = self.result_names.get_names()
         for binding in self.bindings['items']:
-            binding_name = binding["roleRef"]["name"]  # Actually the role name bound to
-            binding_kind = binding["roleRef"]['kind']
-            binding_namespace = binding["metadata"]["namespace"]
+            if any(map(lambda x: x in binding.keys(), ('subjects',))):
+                binding_name = binding["roleRef"]["name"]  # Actually the role name bound to
+                binding_kind = binding["roleRef"]['kind']
+                for subject in binding["subjects"]:
+                    if "namespace" in subject.keys():
+                        binding_namespace = subject["namespace"]  # Should be metadata.namespace but (?)
 
-            matched_role_names = [i for i in role_names if i[1] == binding_name]
-            map(lambda x:
-                FUNCTION_MAPPING.get((x['verb_str'], x['resource_str']))
-                    (binding_name, binding_kind, binding_namespace, x['verbs'], self.cluster),
-                [self.result_names.name_set[index] for index, _ in matched_role_names]
-                )
+                        matched_role_names = [i for i in role_names if i[1] == binding_name]
+                        map(lambda x:
+                            FUNCTION_MAPPING.get((x['verb_str'], x['resource_str']))
+                                (binding_name, binding_kind, binding_namespace, x['verbs'], self.cluster),
+                            [self.result_names.name_set[index] for index, _ in matched_role_names]
+                            )

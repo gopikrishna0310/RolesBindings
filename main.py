@@ -28,4 +28,3 @@ if __name__ == '__main__':
     if args.cluster_role_bindings:
         print("Starting CLUSTER ROLES BINDINGS")
         BindingCheck(file_path=args.cluster_role_bindings, result_names=result_names, cluster=True)
-    print(result_names.name_set)
