@@ -1,0 +1,101 @@
+Tasks:
+******************
+function1 - admin
+******************
+verbs - *
+Resources - *
+
+if * in verbs and * in resources in roles.json:
+   print {metadata.name} is an admin role
+
+if * in verbs and * in resources in clusterroles.json:
+   print {metadata.name} is a clusteradmin role
+
+#changes made
+if {role.name/clusterrole.name} in rolebindings.json:
+    {kind} {name} has Admin Privileges in namespace {rolebindings.root.metadata.namespace}
+
+if {role.name/clusterrole.name} in clusterrolebindings.json:
+    {kind} {name} has Admin Privileges in namespace {namespace} / if {namespace is empty} print Cluster
+
+******************
+function2 - admin read
+******************
+verbs - get/list
+Resources - *
+
+if in roles.json:
+    {name} is an admin read role
+
+if in clusterroles.json:
+    {name} is a clusteradmin read role
+
+#changes made
+if {role.name/clusterrole.name} in rolebindings.json:
+    {kind} {subject} has Read Admin Privileges in namespace {rolebindings.root.metadata.namespace}
+
+if {clusterrole.name} in clusterrolebindings.json:
+    {kind} {subject} has Read Admin Privileges in namespace {namespace} / if {namespace is empty} print Cluster
+
+******************
+function3 - Destructive roles
+******************
+verbs - delete or deletecollection
+resources - from above list
+
+if in roles.json:
+    {name} is an Destructive role
+
+if in clusterroles.json:
+    {name} is a Destructive cluster role
+
+#changesmade
+if {role.name/clusterrole.name} in rolebindings.json:
+    {kind} {subject} has Destructive Privileges on {resources} in namespace {rolebindings.root.metadata.namespace}
+
+if {clusterrole.name} in clusterrolebindings.json:
+    {kind} {subject} has Destructive Privileges on {resources} in namespace {namespace} / if {namespace is empty} print Cluster
+
+******************
+function4 - secrets
+{kind} {subject} has Privileges to {verb} secrets in namespace {namespace} / if {namespace is empty} print Cluster
+******************
+verbs - *, get, list create, update
+resources - secrets
+
+if in roles.json:
+    {name} role can Play with secrets
+
+if in clusterroles.json:
+    {name} clusterrole can Play with secrets
+
+if {role.name/clusterrole.name} in rolebindings.json:
+    {kind} {name} has Privileges to {verb-iterate} secrets in namespace {rolebindings.root.metadata.namespace}
+
+if {clusterrole.name} in clusterrolebindings.json:
+   {kind} {name} has Privileges to {verb-iterate} secrets in namespace {namespace} / if {namespace is empty} print Cluster
+
+
+
+******************
+function5 - impersonate
+******************
+verbs - impersonate
+
+if verb impersonate in roles or clusterroles.json:
+    grab {metadata.name} and check {metadata.name} in rolebindings.json and clusterrolebindings.json
+    if found:
+        {subject.kind} {subject.namename} has Privileges to impersonate {resources- iterate} as {resourcenames-iterate} in namespace {namespace-iterate} or Cluster (if namespace value is emtpy)
+
+
+also:
+
+x = {
+    'function1':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':''}'
+    'function2':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':''},
+    'function3':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':''},
+    'function4':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]'},
+    'function5':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]'},
+    'function6':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]'},
+    'function7':'{'rolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]' }, {'clusterrolename':'metadata.name', 'subjects.kind':'', 'subjects.name':'', 'namespace':'', verbs:'[]'}'
+}
